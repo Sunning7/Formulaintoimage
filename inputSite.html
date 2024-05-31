@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formula to Image</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        img, canvas {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1>Formula</h1>
+    <input type="text" id="formulaInput" placeholder="Enter formula here (e.g., E = mc^2)">
+    <button onclick="renderFormula()">Submit</button>
+    <div id="formulaContainer">
+        <!-- Formula will be displayed here -->
+    </div>
+    <canvas id="formulaCanvas" style="display: none;"></canvas>
+    <div id="result">
+        <!-- Image will be displayed here -->
+    </div>
+</div>
+
+<script>
+    function renderFormula() {
+        const formula = document.getElementById('formulaInput').value;
+        const formulaContainer = document.getElementById('formulaContainer');
+        const formulaCanvas = document.getElementById('formulaCanvas');
+        const resultDiv = document.getElementById('result');
+
+        // Clear previous results
+        formulaContainer.innerHTML = '';
+        resultDiv.innerHTML = '';
+
+        // Render formula using MathJax
+        formulaContainer.innerHTML = `\\[${formula}\\]`;
+        MathJax.typesetPromise([formulaContainer]).then(() => {
+            // Create image from rendered formula
+            const svg = formulaContainer.querySelector('svg');
+            const xml = new XMLSerializer().serializeToString(svg);
+            const svg64 = btoa(xml);
+            const b64Start = 'data:image/svg+xml;base64,';
+            const image64 = b64Start + svg64;
+
+            const img = new Image();
+            img.onload = function() {
+                // Draw the image on the canvas
+                formulaCanvas.width = img.width;
+                formulaCanvas.height = img.height;
+                const ctx = formulaCanvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                // Convert canvas to image
+                const imgURL = formulaCanvas.toDataURL('image/png');
+                const resultImg = document.createElement('img');
+                resultImg.src = imgURL;
+                resultDiv.appendChild(resultImg);
+            };
+            img.src = image64;
+        }).catch((err) => console.error('Error rendering formula:', err));
+    }
+</script>
+
+</body>
+</html>
